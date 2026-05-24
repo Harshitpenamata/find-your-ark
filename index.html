@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Find Your Ark — Creators Ark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #050508;
+    --surface: #0d0d14;
+    --border: rgba(255,255,255,0.06);
+    --text: #f0f0f0;
+    --text-dim: rgba(240,240,240,0.45);
+    /* Brand colors */
+    --orange: #FF6600;
+    --orange-dim: rgba(255,102,0,0.15);
+    --orange-glow: rgba(255,102,0,0.35);
+    --charcoal: #1C1C1C;
+    --dark-grey: #2E2E2E;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* ─── Noise texture overlay ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.7;
+  }
+
+  /* ─── Star field ─── */
+  #stars-canvas {
+    position: fixed; inset: 0; z-index: 0;
+  }
+
+  /* ─── Main layout ─── */
+  #app {
+    position: fixed; inset: 0; z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 12px 16px 16px;
+  }
+
+  /* ─── Header ─── */
+  #header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+
+  .eyebrow {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* "Find Your Ark" — Montserrat for the brand-side word, Cinzel for the mystical word */
+  h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(22px, 4.5vw, 36px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.0;
+    color: #fff;
+  }
+
+  h1 span.accent {
+    color: var(--orange);
+  }
+
+  .tagline {
+    font-family: 'Roboto', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ─── Wheel wrapper ─── */
+  #wheel-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #wheel-canvas {
+    display: block;
+    filter: drop-shadow(0 0 40px rgba(255,102,0,0.08)) drop-shadow(0 0 80px rgba(80,80,200,0.08));
+  }
+
+  /* Pointer (triangle at top) — brand orange */
+  #pointer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-3px);
+    width: 0; height: 0;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 26px solid var(--orange);
+    filter: drop-shadow(0 0 6px var(--orange)) drop-shadow(0 0 16px var(--orange-glow));
+    z-index: 10;
+  }
+
+  /* ─── Spin button — brand CTA style ─── */
+  #spin-btn {
+    margin-top: 18px;
+    padding: 0 52px;
+    height: 54px;
+    background: var(--orange);
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.25s, box-shadow 0.25s, transform 0.15s;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(255,102,0,0.3), 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  #spin-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  #spin-btn:hover {
+    background: #ff7a1a;
+    box-shadow: 0 0 36px rgba(255,102,0,0.5), 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  #spin-btn:active {
+    transform: scale(0.97);
+  }
+
+  #spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ─── Watermark — brand styled ─── */
+  #watermark {
+    position: fixed;
+    bottom: 14px; right: 16px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.25;
+  }
+
+  #watermark .wm-creators {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  #watermark .wm-ark {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--orange);
+    text-transform: uppercase;
+  }
+
+  /* ─── Reveal overlay ─── */
+  #reveal {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    padding: 32px 24px;
+  }
+
+  #reveal.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  #reveal-bg {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.9s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  #reveal.active #reveal-bg { opacity: 1; }
+
+  /* Noise on reveal too */
+  #reveal-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  #reveal-content {
+    position: relative; z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 580px;
+    width: 100%;
+    transform: translateY(40px) scale(0.94);
+    opacity: 0;
+    transition: transform 0.8s cubic-bezier(0.16,1,0.3,1), opacity 0.7s ease;
+  }
+
+  #reveal.active #reveal-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    transition-delay: 0.25s;
+  }
+
+  .reveal-roman {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(14px, 3.5vw, 20px);
+    font-weight: 400;
+    letter-spacing: 0.5em;
+    opacity: 0.6;
+    margin-bottom: 16px;
+  }
+
+  .reveal-divider {
+    width: 48px; height: 2px;
+    margin: 0 auto 22px;
+    opacity: 0.6;
+    border-radius: 2px;
+  }
+
+  /* Archetype name uses Cinzel for the mystical drama */
+  .reveal-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(44px, 11vw, 88px);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    line-height: 0.9;
+    margin-bottom: 8px;
+    text-shadow: 0 0 80px currentColor;
+  }
+
+  /* "The" prefix in Montserrat, lighter */
+  .reveal-name-prefix {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(13px, 3vw, 18px);
+    font-weight: 600;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 6px;
+  }
+
+  .reveal-role {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(11px, 2.2vw, 14px);
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin-bottom: 32px;
+    margin-top: 12px;
+  }
+
+  .reveal-desc {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(13px, 2.6vw, 16px);
+    font-weight: 400;
+    line-height: 2.0;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+    max-width: 420px;
+    margin-bottom: 36px;
+  }
+
+  .reveal-ark-line {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(10px, 1.8vw, 11px);
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin-bottom: 36px;
+  }
+
+  /* Brand logo line on reveal */
+  .reveal-brand {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 36px;
+    opacity: 0.55;
+  }
+
+  .reveal-brand .rb-creators {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .reveal-brand .rb-ark {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--orange);
+    text-transform: uppercase;
+  }
+
+  .reveal-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Ghost button */
+  .btn-secondary {
+    padding: 0 28px;
+    height: 46px;
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.28);
+    border-radius: 3px;
+    color: rgba(255,255,255,0.85);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.25s, color 0.25s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(255,255,255,0.7);
+    color: #fff;
+  }
+
+  /* Brand CTA button — orange */
+  .btn-primary {
+    padding: 0 28px;
+    height: 46px;
+    background: var(--orange);
+    border: none;
+    border-radius: 3px;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.25s, box-shadow 0.25s, transform 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(255,102,0,0.35);
+  }
+
+  .btn-primary:hover {
+    background: #ff7a1a;
+    box-shadow: 0 0 32px rgba(255,102,0,0.55);
+  }
+
+  .btn-primary:active { transform: scale(0.97); }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 480px) {
+    #app { padding: 8px 12px 12px; }
+    #spin-btn { padding: 0 36px; height: 50px; font-size: 13px; }
+    .reveal-desc { font-size: 13px; }
+  }
+
+  @media (max-height: 700px) {
+    #header { margin-bottom: 4px; }
+    #spin-btn { margin-top: 10px; height: 46px; }
+  }
+
+  @media (max-height: 600px) {
+    .eyebrow, .tagline { display: none; }
+    #header { margin-bottom: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<div id="app">
+  <div id="header">
+    <span class="eyebrow">Creators Ark presents</span>
+    <h1>Find Your <span class="accent">Ark</span></h1>
+    <span class="tagline">Discover your creative destiny</span>
+  </div>
+
+  <div id="wheel-section">
+    <div id="pointer"></div>
+    <canvas id="wheel-canvas"></canvas>
+  </div>
+
+  <button id="spin-btn">Spin Your Fate</button>
+</div>
+
+<!-- Reveal overlay -->
+<div id="reveal">
+  <div id="reveal-bg"></div>
+  <div id="reveal-content">
+    <div class="reveal-roman" id="r-roman"></div>
+    <div class="reveal-divider" id="r-divider"></div>
+    <span class="reveal-name-prefix">The</span>
+    <div class="reveal-name" id="r-name"></div>
+    <div class="reveal-role" id="r-role"></div>
+    <div class="reveal-desc" id="r-desc"></div>
+    <div class="reveal-ark-line" id="r-ark"></div>
+    <div class="reveal-brand">
+      <span class="rb-creators">Creators</span><span class="rb-ark">Ark</span>
+    </div>
+    <div class="reveal-actions">
+      <button class="btn-secondary" id="spin-again-btn">Spin Again</button>
+      <a class="btn-primary" id="find-path-btn" href="https://creatorsark.in" target="_blank">Find Your Path →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Watermark -->
+<div id="watermark">
+  <span class="wm-creators">Creators</span><span class="wm-ark">Ark</span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const ARCHETYPES = [
+  {
+    num: 'I',    name: 'Knight',     role: 'Concept Artist',
+    desc: 'You forge worlds before they exist.\nYour blade is a brush.',
+    color: '#FFB300', dark: '#160d00', glow: 'rgba(255,179,0,', icon: '✦'
+  },
+  {
+    num: 'II',   name: 'Architect',  role: '3D Modeller',
+    desc: 'You build the bones of universes.\nSpace bends to your will.',
+    color: '#4DAAFF', dark: '#00111f', glow: 'rgba(77,170,255,', icon: '◈'
+  },
+  {
+    num: 'III',  name: 'Dreamer',    role: 'Unreal Engine Artist',
+    desc: 'You don\'t enter worlds.\nYou conjure them from nothing.',
+    color: '#FF2D9B', dark: '#180010', glow: 'rgba(255,45,155,', icon: '◎'
+  },
+  {
+    num: 'IV',   name: 'Storyteller',role: 'Game Designer',
+    desc: 'Every rule you write becomes\nsomeone else\'s adventure.',
+    color: '#00D4A0', dark: '#001812', glow: 'rgba(0,212,160,', icon: '⬡'
+  },
+  {
+    num: 'V',    name: 'Animator',   role: 'Motion Artist',
+    desc: 'You are the one who makes\nthe still things breathe.',
+    color: '#9B50FF', dark: '#0c001f', glow: 'rgba(155,80,255,', icon: '◉'
+  },
+  {
+    num: 'VI',   name: 'Alchemist',  role: 'VFX Artist',
+    desc: 'You bend light, fire,\nand reality itself.',
+    color: '#FF6A00', dark: '#180800', glow: 'rgba(255,106,0,', icon: '⬟'
+  },
+  {
+    num: 'VII',  name: 'Oracle',     role: 'AR/XR Creator',
+    desc: 'You collapse the distance between\nwhat is and what could be.',
+    color: '#00EEFF', dark: '#00181f', glow: 'rgba(0,238,255,', icon: '◭'
+  },
+  {
+    num: 'VIII', name: 'Weaver',     role: 'Narrative Designer',
+    desc: 'You don\'t write stories.\nYou build the worlds they live in.',
+    color: '#FF2244', dark: '#180008', glow: 'rgba(255,34,68,', icon: '✿'
+  }
+];
+
+const N = ARCHETYPES.length;
+const SEG = (Math.PI * 2) / N;
+const BRAND_ORANGE = '#FF6600';
+
+// ─────────────────────────────────────────────
+//  STAR FIELD
+// ─────────────────────────────────────────────
+(function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [], W, H;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    buildStars();
+  }
+
+  function buildStars() {
+    const count = Math.floor((W * H) / 3200);
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.2 + 0.15,
+      a: Math.random() * 0.8 + 0.1,
+      speed: Math.random() * 0.003 + 0.001,
+      phase: Math.random() * Math.PI * 2
+    }));
+  }
+
+  let t = 0;
+  function draw() {
+    t += 0.016;
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const alpha = s.a * (0.4 + 0.6 * Math.sin(t * s.speed * 60 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ─────────────────────────────────────────────
+//  WHEEL DRAWING
+// ─────────────────────────────────────────────
+const wheelCanvas = document.getElementById('wheel-canvas');
+const wctx = wheelCanvas.getContext('2d');
+let wheelSize, R, cx, cy;
+let spinAngle = 0;
+
+function computeWheelSize() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const available = Math.min(vw - 32, vh - 200);
+  wheelSize = Math.max(260, Math.min(available, 540));
+  wheelCanvas.width = wheelSize;
+  wheelCanvas.height = wheelSize;
+  R = wheelSize / 2 - 5;
+  cx = wheelSize / 2;
+  cy = wheelSize / 2;
+}
+
+function drawWheel(rotation) {
+  const ctx = wctx;
+  ctx.clearRect(0, 0, wheelSize, wheelSize);
+
+  // Very subtle outer ambient glow
+  const ambient = ctx.createRadialGradient(cx, cy, R * 0.85, cx, cy, R + 12);
+  ambient.addColorStop(0, 'rgba(255,102,0,0.04)');
+  ambient.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(cx, cy, R + 12, 0, Math.PI * 2);
+  ctx.fillStyle = ambient;
+  ctx.fill();
+
+  // ── Draw segments ──
+  for (let i = 0; i < N; i++) {
+    const arch = ARCHETYPES[i];
+    const startAngle = rotation + i * SEG - Math.PI / 2;
+    const endAngle   = startAngle + SEG;
+    const midAngle   = startAngle + SEG / 2;
+
+    // Segment fill — deep dark with tiny radial lift near the arc edge
+    const grd = ctx.createRadialGradient(cx, cy, R * 0.18, cx, cy, R);
+    grd.addColorStop(0,   arch.dark + 'ee');
+    grd.addColorStop(0.7, arch.dark + 'ff');
+    grd.addColorStop(1,   lightenHex(arch.dark, 12) + 'ff');
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // Subtle inner fill overlay (slight angular gradient feel)
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.strokeStyle = arch.color + '18';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Bright neon arc on outer rim
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, startAngle, endAngle);
+    ctx.strokeStyle = arch.color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Inner rim (slightly dimmer ring at 92% radius)
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.92, startAngle, endAngle);
+    ctx.strokeStyle = arch.color + '30';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Divider lines between segments
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(startAngle) * (R * 0.22), cy + Math.sin(startAngle) * (R * 0.22));
+    ctx.lineTo(cx + Math.cos(startAngle) * R, cy + Math.sin(startAngle) * R);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // ── Text: Roman numeral (near center) ──
+    const numR = R * 0.42;
+    const numX = cx + Math.cos(midAngle) * numR;
+    const numY = cy + Math.sin(midAngle) * numR;
+    const numFontSize = Math.max(8, wheelSize * 0.022);
+
+    ctx.save();
+    ctx.translate(numX, numY);
+    ctx.rotate(midAngle + Math.PI / 2);
+    ctx.font = `600 ${numFontSize}px 'Cinzel', serif`;
+    ctx.fillStyle = arch.color + 'bb';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(arch.num, 0, 0);
+    ctx.restore();
+
+    // ── Text: Archetype name (mid zone) ──
+    const nameR = R * 0.64;
+    const nameX = cx + Math.cos(midAngle) * nameR;
+    const nameY = cy + Math.sin(midAngle) * nameR;
+    const nameFontSize = Math.max(8, wheelSize * 0.027);
+
+    ctx.save();
+    ctx.translate(nameX, nameY);
+    ctx.rotate(midAngle + Math.PI / 2);
+    // "The" in small Montserrat
+    const theFontSize = nameFontSize * 0.62;
+    ctx.font = `600 ${theFontSize}px 'Montserrat', sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('THE', 0, -nameFontSize * 0.78);
+    // Name in Cinzel, archetype color
+    ctx.font = `700 ${nameFontSize}px 'Cinzel', serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(arch.name, 0, nameFontSize * 0.3);
+    ctx.restore();
+
+    // ── Icon (near outer edge) ──
+    const iconR = R * 0.855;
+    const iconX = cx + Math.cos(midAngle) * iconR;
+    const iconY = cy + Math.sin(midAngle) * iconR;
+    const iconSize = Math.max(10, wheelSize * 0.030);
+
+    ctx.save();
+    ctx.translate(iconX, iconY);
+    ctx.font = `${iconSize}px sans-serif`;
+    ctx.fillStyle = arch.color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = 0.9;
+    ctx.fillText(arch.icon, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ── Hub ──
+  drawHub(ctx);
+}
+
+function drawHub(ctx) {
+  const hubR = R * 0.195;
+
+  // Hub glow halo
+  const hubGlow = ctx.createRadialGradient(cx, cy, hubR * 0.4, cx, cy, hubR + 14);
+  hubGlow.addColorStop(0, 'rgba(255,102,0,0.18)');
+  hubGlow.addColorStop(0.5, 'rgba(255,102,0,0.06)');
+  hubGlow.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR + 14, 0, Math.PI * 2);
+  ctx.fillStyle = hubGlow;
+  ctx.fill();
+
+  // Hub body
+  const hubFill = ctx.createRadialGradient(cx - hubR * 0.15, cy - hubR * 0.2, 0, cx, cy, hubR);
+  hubFill.addColorStop(0, '#22203a');
+  hubFill.addColorStop(0.65, '#10101e');
+  hubFill.addColorStop(1, '#080810');
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
+  ctx.fillStyle = hubFill;
+  ctx.fill();
+
+  // Hub outer border — brand orange tint
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,102,0,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Hub inner ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR * 0.82, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Hub text — brand logo style
+  // "CREATORS" in white, "ARK" in orange
+  const baseFontSize = Math.max(5.5, hubR * 0.28);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = `700 ${baseFontSize}px 'Montserrat', sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText('CREATORS', cx, cy - baseFontSize * 0.75);
+
+  ctx.font = `800 ${baseFontSize * 1.1}px 'Montserrat', sans-serif`;
+  ctx.fillStyle = BRAND_ORANGE;
+  ctx.fillText('ARK', cx, cy + baseFontSize * 0.72);
+}
+
+// Lighten a dark hex string by a fixed amount (for segment gradient)
+function lightenHex(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((n >> 16) & 0xff) + amount);
+  const g = Math.min(255, ((n >> 8)  & 0xff) + amount);
+  const b = Math.min(255, ( n        & 0xff) + amount);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+// ─────────────────────────────────────────────
+//  SPIN LOGIC
+// ─────────────────────────────────────────────
+let spinning = false;
+let spinVelocity = 0;
+let animFrame = null;
+let landedIndex = -1;
+let lastTickSegment = -1;
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playTick(fast) {
+  if (!audioCtx) return;
+  const osc  = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = fast ? 900 + Math.random() * 300 : 600 + Math.random() * 200;
+  osc.type = 'triangle';
+  const vol = fast ? 0.05 : 0.09;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.055);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.06);
+}
+
+function getSegmentAtPointer(angle) {
+  // Pointer fixed at top (-π/2). Find which segment covers that point.
+  let rel = ((-Math.PI / 2 - angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  return Math.floor(rel / SEG) % N;
+}
+
+function spinStep() {
+  if (!spinning) return;
+  spinAngle += spinVelocity;
+  spinVelocity *= 0.9875;
+
+  const cur = getSegmentAtPointer(spinAngle);
+  if (cur !== lastTickSegment) {
+    playTick(spinVelocity > 0.08);
+    lastTickSegment = cur;
+  }
+
+  drawWheel(spinAngle);
+
+  if (spinVelocity > 0.0025) {
+    animFrame = requestAnimationFrame(spinStep);
+  } else {
+    spinning = false;
+    landedIndex = getSegmentAtPointer(spinAngle);
+    // Snap to segment center
+    const rel = ((-Math.PI / 2 - spinAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    const segIdx = Math.floor(rel / SEG);
+    spinAngle = -Math.PI / 2 - (segIdx * SEG + SEG / 2);
+    drawWheel(spinAngle);
+    document.getElementById('spin-btn').disabled = false;
+    setTimeout(showReveal, 700);
+  }
+}
+
+function startSpin() {
+  if (spinning) return;
+  ensureAudio();
+  spinning = true;
+  document.getElementById('spin-btn').disabled = true;
+  // 4–7 full rotations, random landing
+  const rotations = (4 + Math.random() * 3) * Math.PI * 2;
+  const randomExtra = (Math.random() * Math.PI * 2);
+  spinVelocity = (rotations + randomExtra) / 230;
+  lastTickSegment = getSegmentAtPointer(spinAngle);
+  animFrame = requestAnimationFrame(spinStep);
+}
+
+// ─────────────────────────────────────────────
+//  REVEAL
+// ─────────────────────────────────────────────
+function showReveal() {
+  const arch   = ARCHETYPES[landedIndex];
+  const reveal = document.getElementById('reveal');
+
+  document.getElementById('r-roman').textContent = arch.num;
+  document.getElementById('r-roman').style.color  = arch.color;
+
+  const div = document.getElementById('r-divider');
+  div.style.background = `linear-gradient(90deg, transparent, ${arch.color}, transparent)`;
+
+  document.getElementById('r-name').textContent = arch.name;
+  document.getElementById('r-name').style.color  = arch.color;
+
+  document.getElementById('r-role').textContent  = arch.role;
+  document.getElementById('r-role').style.color  = arch.color + 'aa';
+
+  document.getElementById('r-desc').innerHTML    = arch.desc.replace(/\n/g, '<br>');
+
+  document.getElementById('r-ark').textContent   =
+    `Creators Ark trains The ${arch.name}s of India.`;
+
+  // Background: dark radial from archetype dark color
+  const bg = document.getElementById('reveal-bg');
+  bg.style.background =
+    `radial-gradient(ellipse at 50% 40%, ${arch.dark}ff 0%, #030305 65%)`;
+
+  reveal.classList.add('active');
+}
+
+function hideReveal() {
+  document.getElementById('reveal').classList.remove('active');
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+function init() {
+  computeWheelSize();
+  drawWheel(spinAngle);
+}
+
+window.addEventListener('resize', () => { computeWheelSize(); drawWheel(spinAngle); });
+
+document.getElementById('spin-btn').addEventListener('click', startSpin);
+document.getElementById('spin-again-btn').addEventListener('click', hideReveal);
+document.getElementById('reveal').addEventListener('click', e => {
+  if (e.target === document.getElementById('reveal-bg')) hideReveal();
+});
+
+init();
+</script>
+</body>
+</html>
