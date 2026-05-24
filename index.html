@@ -465,7 +465,7 @@
     </div>
     <div class="reveal-actions">
       <button class="btn-secondary" id="spin-again-btn">Spin Again</button>
-      <a class="btn-primary" id="find-path-btn" href="https://www.creatorsark.com" target="_blank">Find Your Path →</a>
+      <a class="btn-primary" id="find-path-btn" href="#" target="_blank">Find Your Path →</a>
     </div>
   </div>
 </div>
@@ -481,44 +481,58 @@
 // ─────────────────────────────────────────────
 const ARCHETYPES = [
   {
-    num: 'I',    name: 'Knight',     role: 'Concept Artist',
-    desc: 'You forge worlds before they exist.\nYour blade is a brush.',
-    color: '#FFB300', dark: '#160d00', glow: 'rgba(255,179,0,', icon: '✦'
+    num: 'I',    name: 'Knight',      role: '3D Asset & Character',
+    desc: 'You forge the creatures and worlds\nthat others dare to inhabit.',
+    color: '#FFB300', dark: '#160d00', icon: '✦',
+    url: 'https://www.creatorsark.com/career-tracks/studio-environment-asset-artist'
   },
   {
-    num: 'II',   name: 'Architect',  role: '3D Modeller',
+    num: 'II',   name: 'Architect',   role: 'Unreal Engine: Real-Time Production',
     desc: 'You build the bones of universes.\nSpace bends to your will.',
-    color: '#4DAAFF', dark: '#00111f', glow: 'rgba(77,170,255,', icon: '◈'
+    color: '#4DAAFF', dark: '#00111f', icon: '◈',
+    url: 'https://www.creatorsark.com/career-tracks/unreal-virtual-production-artist'
   },
   {
-    num: 'III',  name: 'Dreamer',    role: 'Unreal Engine Artist',
-    desc: 'You don\'t enter worlds.\nYou conjure them from nothing.',
-    color: '#FF2D9B', dark: '#180010', glow: 'rgba(255,45,155,', icon: '◎'
+    num: 'III',  name: 'Dreamer',     role: '2D Art & Animation',
+    desc: 'You breathe life into the drawn line.\nFrame by frame, you make imagination real.',
+    color: '#FF2D9B', dark: '#180010', icon: '◎',
+    url: 'https://www.creatorsark.com/career-tracks/2d-art-animation'
   },
   {
-    num: 'IV',   name: 'Storyteller',role: 'Game Designer',
+    num: 'IV',   name: 'Storyteller', role: 'Game Design',
     desc: 'Every rule you write becomes\nsomeone else\'s adventure.',
-    color: '#00D4A0', dark: '#001812', glow: 'rgba(0,212,160,', icon: '⬡'
+    color: '#00D4A0', dark: '#001812', icon: '⬡',
+    url: 'https://www.creatorsark.com/career-tracks/interactive-experience-designer'
   },
   {
-    num: 'V',    name: 'Animator',   role: 'Motion Artist',
+    num: 'V',    name: 'Animator',    role: '3D Rigging & Animation',
     desc: 'You are the one who makes\nthe still things breathe.',
-    color: '#9B50FF', dark: '#0c001f', glow: 'rgba(155,80,255,', icon: '◉'
+    color: '#9B50FF', dark: '#0c001f', icon: '◉',
+    url: 'https://www.creatorsark.com/career-tracks/production-3d-animator'
   },
   {
-    num: 'VI',   name: 'Alchemist',  role: 'VFX Artist',
+    num: 'VI',   name: 'Alchemist',   role: 'Houdini FX & Simulation',
     desc: 'You bend light, fire,\nand reality itself.',
-    color: '#FF6A00', dark: '#180800', glow: 'rgba(255,106,0,', icon: '⬟'
+    color: '#FF6A00', dark: '#180800', icon: '⬟',
+    url: 'https://www.creatorsark.com/career-tracks/production-fx-artist-houdini'
   },
   {
-    num: 'VII',  name: 'Oracle',     role: 'AR/XR Creator',
-    desc: 'You collapse the distance between\nwhat is and what could be.',
-    color: '#00EEFF', dark: '#00181f', glow: 'rgba(0,238,255,', icon: '◭'
+    num: 'VII',  name: 'Oracle',      role: 'Game Development',
+    desc: 'You write the logic that makes\nimaginary worlds obey their own rules.',
+    color: '#00EEFF', dark: '#00181f', icon: '◭',
+    url: 'https://www.creatorsark.com/career-tracks/realtime-gameplay-xr-developer'
   },
   {
-    num: 'VIII', name: 'Weaver',     role: 'Narrative Designer',
-    desc: 'You don\'t write stories.\nYou build the worlds they live in.',
-    color: '#FF2244', dark: '#180008', glow: 'rgba(255,34,68,', icon: '✿'
+    num: 'VIII', name: 'Weaver',      role: 'Motion Graphics & Video Editing',
+    desc: 'You don\'t tell stories.\nYou build the worlds they live in.',
+    color: '#FF2244', dark: '#180008', icon: '✿',
+    url: 'https://www.creatorsark.com/career-tracks/motion-graphics-video-editing'
+  },
+  {
+    num: 'IX',   name: 'Conjurer',    role: 'Compositing & Post-Production',
+    desc: 'You are the final eye.\nNothing reaches the world without passing through you.',
+    color: '#00FF87', dark: '#001a0e', icon: '◇',
+    url: 'https://www.creatorsark.com/career-tracks/production-vfx-compositor'
   }
 ];
 
@@ -876,6 +890,9 @@ function showReveal() {
 
   document.getElementById('r-ark').textContent   =
     `Creators Ark trains The ${arch.name}s of India.`;
+
+  // Wire the Find Your Path button to the course-specific URL
+  document.getElementById('find-path-btn').href = arch.url;
 
   // Background: dark radial from archetype dark color
   const bg = document.getElementById('reveal-bg');
